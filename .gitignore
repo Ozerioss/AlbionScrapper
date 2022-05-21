@@ -1,2 +1,4 @@
 albion-api/resources/conf/config.local.ini
 __pycache__/
+.idea
+venv

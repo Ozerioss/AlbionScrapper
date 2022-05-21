@@ -1,9 +1,8 @@
-import requests
-from main import insert_db
-from requests.adapters import HTTPAdapter, Retry
+from web_scrapper import insert_db
 import json
-import psycopg2
 from config import read_config
+from core.psql_connection import open_connection
+from core.session import get_session
 
 
 def get_battle_ids(base_url, session, connection):
@@ -54,23 +53,12 @@ def get_guild_members(base_url, session, connection, guild_id):
 
 if __name__ == "__main__":
     config = read_config()
-    db_user = config["DATABASE"]["user"]
-    db_password = config["DATABASE"]["password"]
+    db_conf = config["DATABASE"]
 
     albion_api_base_url = "https://gameinfo.albiononline.com/api/gameinfo/"
-    session = requests.Session()
+    session = get_session()
 
-    retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
-
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-
-    connection = psycopg2.connect(
-        user=db_user,
-        password=db_password,
-        host="127.0.0.1",
-        port="5432",
-        database="AlbionDB",
-    )
+    connection = open_connection(db_conf)
 
     get_battle_ids(albion_api_base_url, session, connection)
     connection.close()

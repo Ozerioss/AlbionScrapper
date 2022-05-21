@@ -5,7 +5,7 @@ import re
 from psycopg2 import Error
 import sys
 from config import read_config
-from util.psql_connection import open_connection
+from core.psql_connection import open_connection
 
 
 def get_killboard_html(
@@ -47,7 +47,8 @@ def create_player_id_table(connection):
     try:
         cursor = connection.cursor()
         cursor.execute(
-            f"CREATE TABLE IF NOT EXISTS players.player_id (id VARCHAR(100) UNIQUE, insertion_timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP);"
+            f"CREATE TABLE IF NOT EXISTS players.player_id (id VARCHAR(100) UNIQUE, insertion_timestamp TIMESTAMP NOT "
+            f"NULL DEFAULT CURRENT_TIMESTAMP); "
         )
         connection.commit()
         print("Created table")

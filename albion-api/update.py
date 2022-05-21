@@ -1,20 +1,12 @@
-import psycopg2
 from psycopg2 import Error
-import requests
-from requests.adapters import HTTPAdapter, Retry
 import json
-from util import read_config
+from config import read_config
+from core.psql_connection import open_connection
+from core.session import get_session
 
 
-def get_players_id(db_user, db_password):
+def get_players_id(connection):
     try:
-        connection = psycopg2.connect(
-            user=db_user,
-            password=db_password,
-            host="127.0.0.1",
-            port="5432",
-            database="AlbionDB",
-        )
         cursor = connection.cursor()
         print("PostgreSQL is up")
         select_id = "SELECT id FROM players.player_id ORDER BY kd_ratio desc"
@@ -72,23 +64,12 @@ def update_table(player_id, kd_ratio, player_name, kill_fame, death_fame, connec
 
 if __name__ == "__main__":
     config = read_config()
-    db_user = config["DATABASE"]["user"]
-    db_password = config["DATABASE"]["password"]
+    db_conf = config["DATABASE"]
     albion_api_base_url = "https://gameinfo.albiononline.com/api/gameinfo/"
 
-    connection = psycopg2.connect(
-        user=db_user,
-        password=db_password,
-        host="127.0.0.1",
-        port="5432",
-        database="AlbionDB",
-    )
-    session = requests.Session()
-
-    retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
-
-    session.mount("https://", HTTPAdapter(max_retries=retries))
-    player_ids = get_players_id(db_user, db_password)
+    connection = open_connection(db_conf)
+    session = get_session()
+    player_ids = get_players_id(connection)
     kd_ratio_batch = []
     offset = 0
     total = 0
@@ -105,8 +86,3 @@ if __name__ == "__main__":
         )
     connection.close()
     print("Closed Postgresql")
-    # if offset >= 100:
-    #     print(f"Updating {offset} rows")
-    #     update_table(kd_ratio_batch, player_id)
-    #     print("total rows updated so far : ", total)
-    #     offset = 0
