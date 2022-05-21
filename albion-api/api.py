@@ -5,6 +5,7 @@ import json
 import psycopg2
 from config import read_config
 
+
 def get_battle_ids(base_url, session, connection):
     for offset in range(0, 9949, 51):
         print(f"Handling battles at offset : {offset}")
@@ -61,7 +62,7 @@ if __name__ == "__main__":
 
     retries = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
 
-    session.mount("http://", HTTPAdapter(max_retries=retries))
+    session.mount("https://", HTTPAdapter(max_retries=retries))
 
     connection = psycopg2.connect(
         user=db_user,

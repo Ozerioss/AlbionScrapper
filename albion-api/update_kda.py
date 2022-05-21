@@ -3,7 +3,7 @@ from psycopg2 import Error
 import requests
 from requests.adapters import HTTPAdapter, Retry
 import json
-from config import read_config
+from util import read_config
 
 
 def get_players_id(db_user, db_password):

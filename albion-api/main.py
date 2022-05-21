@@ -2,10 +2,10 @@ from requests_html import HTMLSession
 from time import sleep, time
 from datetime import datetime
 import re
-import psycopg2
 from psycopg2 import Error
 import sys
 from config import read_config
+from util.psql_connection import open_connection
 
 
 def get_killboard_html(
@@ -26,7 +26,6 @@ def get_killboard_html(
 
 def insert_db(batch_player_id, connection):
     current_timestamp = datetime.now().isoformat()
-
     try:
         cursor = connection.cursor()
         print(f"batch players : {len(batch_player_id)}")
@@ -63,10 +62,10 @@ def parse_page(raw_links):
     batch_player_id = []
     batch_guild_id = []
     batch_alliance_id = []
-    for item in raw_links:
-        player_id = re.search(r"(?<=\/en\/killboard\/player\/).*", item)
-        guild_id = re.search(r"(?<=\/en\/killboard\/guild\/).*", item)
-        alliance_id = re.search(r"(?<=\/en\/killboard\/alliance\/).*", item)
+    for element in raw_links:
+        player_id = re.search(r"(?<=\/en\/killboard\/player\/).*", element)
+        guild_id = re.search(r"(?<=\/en\/killboard\/guild\/).*", element)
+        alliance_id = re.search(r"(?<=\/en\/killboard\/alliance\/).*", element)
         if player_id:
             batch_player_id.append(player_id.group())
         if guild_id:
@@ -77,20 +76,15 @@ def parse_page(raw_links):
 
 
 if __name__ == "__main__":
-    # TODO configparser module & update config file with API conf
     config = read_config()
-    db_user = config['DATABASE']['user']
-    db_password = config["DATABASE"]["password"]
-    count_runs = 0
+    db_conf = config["DATABASE"]
+
     session = HTMLSession()
-    connection = psycopg2.connect(
-        user=db_user,
-        password=db_password,
-        host="127.0.0.1",
-        port="5432",
-        database="AlbionDB",
-    )
+    connection = open_connection(db_conf)
+
     create_player_id_table(connection)
+
+    count_runs = 0
     while True:
         count_runs += 1
         raw_links = get_killboard_html(session=session)
@@ -102,7 +96,8 @@ if __name__ == "__main__":
             raw_links_guild = get_killboard_html(
                 session=session, extra_path=f"/guild/{item}"
             )
-            # Could make this recursive and parse the guilds of the guilds etc but might get me kicked out for too many requests
+            # Could make this recursive and parse the guilds of the guilds etc but might get me kicked out for too
+            # many requests
             batch_player_id, batch_guild_id, batch_alliance_id = parse_page(
                 raw_links_guild
             )
@@ -115,7 +110,8 @@ if __name__ == "__main__":
                 raw_links_alliance = get_killboard_html(
                     session=session, extra_path=f"/alliance/{item}"
                 )
-                # Could make this recursive and parse the guilds of the guilds etc but might get me kicked out for too many requests
+                # Could make this recursive and parse the guilds of the guilds etc but might get me kicked out for
+                # too many requests
                 batch_player_id, batch_guild_id, batch_alliance_id = parse_page(
                     raw_links_alliance
                 )
