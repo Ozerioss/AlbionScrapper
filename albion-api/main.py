@@ -5,7 +5,7 @@ import re
 import psycopg2
 from psycopg2 import Error
 import sys
-import configparser
+from config import read_config
 
 
 def get_killboard_html(
@@ -78,9 +78,8 @@ def parse_page(raw_links):
 
 if __name__ == "__main__":
     # TODO configparser module & update config file with API conf
-    config = configparser.ConfigParser()
-    config.read("config.local.ini")
-    db_user = config["DATABASE"]["user"]
+    config = read_config()
+    db_user = config['DATABASE']['user']
     db_password = config["DATABASE"]["password"]
     count_runs = 0
     session = HTMLSession()

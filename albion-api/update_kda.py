@@ -3,7 +3,7 @@ from psycopg2 import Error
 import requests
 from requests.adapters import HTTPAdapter, Retry
 import json
-import configparser
+from config import read_config
 
 
 def get_players_id(db_user, db_password):
@@ -71,8 +71,7 @@ def update_table(player_id, kd_ratio, player_name, kill_fame, death_fame, connec
 
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    config.read("config.local.ini")
+    config = read_config()
     db_user = config["DATABASE"]["user"]
     db_password = config["DATABASE"]["password"]
     albion_api_base_url = "https://gameinfo.albiononline.com/api/gameinfo/"

@@ -3,8 +3,7 @@ from main import insert_db
 from requests.adapters import HTTPAdapter, Retry
 import json
 import psycopg2
-import configparser
-
+from config import read_config
 
 def get_battle_ids(base_url, session, connection):
     for offset in range(0, 9949, 51):
@@ -53,8 +52,7 @@ def get_guild_members(base_url, session, connection, guild_id):
 
 
 if __name__ == "__main__":
-    config = configparser.ConfigParser()
-    config.read("config.local.ini")
+    config = read_config()
     db_user = config["DATABASE"]["user"]
     db_password = config["DATABASE"]["password"]
 
