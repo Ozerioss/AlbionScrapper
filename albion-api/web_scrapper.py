@@ -1,11 +1,10 @@
 from requests_html import HTMLSession
 from time import sleep, time
-from datetime import datetime
 import re
-from psycopg2 import Error
-import sys
 from config import read_config
 from core.psql_connection import open_connection
+from database.create_table import create_player_id_table
+from database.insert_rows import insert_db
 
 
 def get_killboard_html(
@@ -22,41 +21,6 @@ def get_killboard_html(
 
     print(f"Time taken for loading the js: {end - start}")
     return raw_links
-
-
-def insert_db(batch_player_id, connection):
-    current_timestamp = datetime.now().isoformat()
-    try:
-        cursor = connection.cursor()
-        print(f"batch players : {len(batch_player_id)}")
-        row_count = 0
-        for player in batch_player_id:
-            cursor.execute(
-                f"INSERT INTO players.player_id(id, insertion_timestamp) VALUES ('{player}', '{current_timestamp}') ON CONFLICT (id) DO NOTHING"
-            )
-            connection.commit()
-            row_count += cursor.rowcount
-        print(f"{row_count} records inserted")
-    except (Exception, Error) as error:
-        print("Error while handling PostgreSQL request", error)
-    finally:
-        cursor.close()
-
-
-def create_player_id_table(connection):
-    try:
-        cursor = connection.cursor()
-        cursor.execute(
-            f"CREATE TABLE IF NOT EXISTS players.player_id (id VARCHAR(100) UNIQUE, insertion_timestamp TIMESTAMP NOT "
-            f"NULL DEFAULT CURRENT_TIMESTAMP); "
-        )
-        connection.commit()
-        print("Created table")
-    except (Exception, Error) as error:
-        print("Error while creating table", error)
-        sys.exit()
-    finally:
-        cursor.close()
 
 
 def parse_page(raw_links):
