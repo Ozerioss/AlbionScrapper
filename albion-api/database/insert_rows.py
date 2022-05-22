@@ -10,7 +10,9 @@ def insert_db(batch_player_id, connection):
         row_count = 0
         for player in batch_player_id:
             cursor.execute(
-                f"INSERT INTO players.player_id(id, insertion_timestamp) VALUES ('{player}', '{current_timestamp}') ON CONFLICT (id) DO NOTHING"
+                f"INSERT INTO players.player_id(id, insertion_timestamp) VALUES ("
+                f"'{player}', '{current_timestamp}') "
+                f"ON CONFLICT (id) DO NOTHING"
             )
             connection.commit()
             row_count += cursor.rowcount
