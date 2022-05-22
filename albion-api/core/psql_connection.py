@@ -2,6 +2,7 @@ import psycopg2
 
 
 def open_connection(db_conf):
+    # TODO add host & port to conf
     connection = psycopg2.connect(
         user=db_conf["user"],
         password=db_conf["password"],

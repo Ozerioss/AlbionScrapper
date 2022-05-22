@@ -4,7 +4,7 @@ import re
 from config import read_config
 from core.psql_connection import open_connection
 from database.create_table import create_player_id_table
-from database.insert_rows import insert_db
+from database.operations import insert_db
 
 
 def get_killboard_html(
@@ -16,28 +16,28 @@ def get_killboard_html(
 
     r = session.get(url)
     r.html.render(sleep=5, timeout=30)
-    raw_links = r.html.links
+    links = r.html.links
     end = time()
 
     print(f"Time taken for loading the js: {end - start}")
-    return raw_links
+    return links
 
 
-def parse_page(raw_links):
-    batch_player_id = []
-    batch_guild_id = []
-    batch_alliance_id = []
-    for element in raw_links:
+def parse_page(links):
+    player_id_list = []
+    guild_id_list = []
+    alliance_id_list = []
+    for element in links:
         player_id = re.search(r"(?<=\/en\/killboard\/player\/).*", element)
         guild_id = re.search(r"(?<=\/en\/killboard\/guild\/).*", element)
         alliance_id = re.search(r"(?<=\/en\/killboard\/alliance\/).*", element)
         if player_id:
-            batch_player_id.append(player_id.group())
+            player_id_list.append(player_id.group())
         if guild_id:
-            batch_guild_id.append(guild_id.group())
+            guild_id_list.append(guild_id.group())
         if alliance_id:
-            batch_alliance_id.append(alliance_id.group())
-    return batch_player_id, batch_guild_id, batch_alliance_id
+            alliance_id_list.append(alliance_id.group())
+    return player_id_list, guild_id_list, alliance_id_list
 
 
 if __name__ == "__main__":
@@ -75,8 +75,6 @@ if __name__ == "__main__":
                 raw_links_alliance = get_killboard_html(
                     session=session, extra_path=f"/alliance/{item}"
                 )
-                # Could make this recursive and parse the guilds of the guilds etc but might get me kicked out for
-                # too many requests
                 batch_player_id, batch_guild_id, batch_alliance_id = parse_page(
                     raw_links_alliance
                 )

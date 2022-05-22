@@ -1,5 +1,4 @@
 from psycopg2 import Error
-import sys
 
 
 def create_player_id_table(connection):
@@ -19,6 +18,6 @@ def create_player_id_table(connection):
         print("Created table")
     except (Exception, Error) as error:
         print("Error while creating table", error)
-        sys.exit()  # TODO update this to gracefully exit
+        raise
     finally:
         cursor.close()

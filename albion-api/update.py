@@ -1,31 +1,13 @@
-from psycopg2 import Error
 import json
 from config import read_config
 from core.psql_connection import open_connection
 from core.session import get_session
+from database.operations import get_players_id, update_row
 
 
-def get_players_id(connection):
-    try:
-        cursor = connection.cursor()
-        print("PostgreSQL is up")
-        select_id = "SELECT id FROM players.player_id ORDER BY kd_ratio desc"
-        cursor.execute(select_id)
-        player_ids = cursor.fetchall()
-        print(f"{len(player_ids)} player ids")
-        return player_ids
-    except (Exception, Error) as error:
-        print("Error while handling PostgreSQL request", error)
-    finally:
-        if connection:
-            cursor.close()
-            connection.close()
-            print("Closed PostgreSQL")
-
-
-def get_kda(base_url, id, session):
-    print("Getting player info for ", id)
-    player_url = base_url + f"players/{id}"
+def get_kda(base_url, player_id, session):
+    print("Getting player info for ", player_id)
+    player_url = base_url + f"players/{player_id}"
 
     response = session.get(player_url)
 
@@ -47,42 +29,28 @@ def get_kda(base_url, id, session):
     return kd_ratio, player_name, kill_fame, death_fame
 
 
-def update_table(player_id, kd_ratio, player_name, kill_fame, death_fame, connection):
-    if player_name:
-        try:
-            print("PostgreSQL is up")
-            cursor = connection.cursor()
-            update_statement = f"UPDATE players.player_id SET kd_ratio='{kd_ratio}', player_name = '{player_name}', kill_fame='{kill_fame}', death_fame='{death_fame}' WHERE id = '{player_id}'"
-            cursor.execute(update_statement)
-            connection.commit()
-            print(f"Updated {cursor.rowcount} row successfully")
-        except (Exception, Error) as error:
-            print("Error while handling PostgreSQL request", error)
-        finally:
-            cursor.close()
+def run_mass_update(connection, session, base_url):
+    player_ids = get_players_id(connection)
+    total = 0
+    for row in player_ids:
+        player_id = row[0]
+        kd_ratio, player_name, kill_fame, death_fame = get_kda(
+            base_url, player_id, session
+        )
+        total += 1
+        print("Number of total players updated: ", total)
+        update_row(player_id, kd_ratio, player_name, kill_fame, death_fame, connection)
 
 
 if __name__ == "__main__":
     config = read_config()
     db_conf = config["DATABASE"]
-    albion_api_base_url = "https://gameinfo.albiononline.com/api/gameinfo/"
+    albion_api_base_url = config["API"]["url"]
 
-    connection = open_connection(db_conf)
-    session = get_session()
-    player_ids = get_players_id(connection)
-    kd_ratio_batch = []
-    offset = 0
-    total = 0
-    for row in player_ids:
-        player_id = row[0]
-        kd_ratio, player_name, kill_fame, death_fame = get_kda(
-            albion_api_base_url, player_id, session
-        )
-        offset += 1
-        total += 1
-        print("Number of total players updated: ", total)
-        update_table(
-            player_id, kd_ratio, player_name, kill_fame, death_fame, connection
-        )
-    connection.close()
+    psql_connection = open_connection(db_conf)
+    s = get_session()
+
+    run_mass_update(psql_connection, s, albion_api_base_url)
+
+    psql_connection.close()
     print("Closed Postgresql")
