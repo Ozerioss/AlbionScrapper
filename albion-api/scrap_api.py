@@ -8,7 +8,7 @@ from core.session import get_session
 def get_battle_ids(base_url, session, connection):
     for offset in range(0, 9949, 51):
         print(f"Handling battles at offset : {offset}")
-        battles_url = base_url + f"battles?range=month&offset={offset}&limit=51"
+        battles_url = base_url + f"battles?range=week&offset={offset}&limit=51"
         response = session.get(battles_url)
 
         try:
@@ -62,3 +62,4 @@ if __name__ == "__main__":
 
     get_battle_ids(albion_api_base_url, session, connection)
     connection.close()
+    print("Closed Postgresql")
