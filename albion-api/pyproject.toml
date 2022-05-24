@@ -16,9 +16,9 @@ pytest = "^7.1.2"
 flake8 = "^4.0.1"
 
 [tool.poetry.scripts]
-web-scrapper = "main:app"
-api-scrapper = "api:app"
-update-db = "update_kda:app"
+web-scrapper = "web_scrapper:app"
+api-scrapper = "scrap_api:app"
+update-db = "update:app"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
