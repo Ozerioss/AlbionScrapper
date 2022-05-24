@@ -5,8 +5,8 @@ def open_connection(db_conf):
     connection = psycopg2.connect(
         user=db_conf["user"],
         password=db_conf["password"],
-        host="127.0.0.1",
-        port="5432",
+        host=db_conf["host"],
+        port=db_conf["port"],
         database=db_conf["db_name"],
     )
 
